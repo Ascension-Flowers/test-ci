@@ -1,0 +1,39 @@
+name: version
+on:
+  pull_request:
+    branches:
+     - master
+    types:
+     - closed
+    paths:
+     - '**'
+     - '!version.txt'
+
+
+
+jobs:
+  bump:
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.base_ref }}
+
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Push a version bump commit to ${{ github.base_ref }}
+        run: |
+          echo "pull_request.merged: ${{ github.event.pull_request.merged }}"
+          git status
+          git log -1
+          git config user.name "auto-release"
+          git config user.email "auto-release@panchenko.email"
+          echo ${{github.run_number}} > version.txt
+          git add version.txt
+          git commit -m "Automatic Release: ${{github.run_number}}"
+          git push origin ${{ github.base_ref }}
